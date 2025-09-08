@@ -6,27 +6,27 @@ WORKDIR /app
 # Install pnpm globally
 RUN corepack enable
 
-# Copy root package files for workspace setup
+# Copy workspace configuration
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Copy backend package.json
 COPY apps/backend/package.json ./apps/backend/
 
-# Install all dependencies from root
-RUN pnpm install --frozen-lockfile
+# Install all dependencies (this installs for the entire workspace)
+RUN pnpm install
 
-# Copy backend source code (excluding node_modules)
+# Copy backend source code
 COPY apps/backend/src ./apps/backend/src
 COPY apps/backend/test ./apps/backend/test
 COPY apps/backend/tsconfig*.json ./apps/backend/
 COPY apps/backend/nest-cli.json ./apps/backend/
 COPY apps/backend/eslint.config.mjs ./apps/backend/
 
-# Switch to backend directory
+# Set working directory to backend
 WORKDIR /app/apps/backend
 
 # Expose port
 EXPOSE 3000
 
-# Start in development mode with watch
+# Start in development mode
 CMD ["pnpm", "run", "dev"]

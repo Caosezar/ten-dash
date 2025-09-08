@@ -10,10 +10,30 @@ services:
       - ./apps/backend/src:/app/apps/backend/src:cached
       - ./apps/backend/test:/app/apps/backend/test:cached
       - /app/apps/backend/node_modules
-      - /app/node_modules
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
+    networks:
+      - ten-dash-network
+    restart: unless-stopped
+
+  frontend:
+    container_name: ten-dash-frontend
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/frontend/app:/app/apps/frontend/app:cached
+      - ./apps/frontend/lib:/app/apps/frontend/lib:cached
+      - ./apps/frontend/public:/app/apps/frontend/public:cached
+      - /app/apps/frontend/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:3000
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - backend
     networks:
       - ten-dash-network
     restart: unless-stopped
