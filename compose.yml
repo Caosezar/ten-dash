@@ -1,12 +1,24 @@
 services:
-  ten-dash:
-    container_name: ten-dash
-    image: ten-dash
+  backend:
+    container_name: ten-dash-backend
     build: 
       context: .
+      dockerfile: apps/backend/Dockerfile.dev
     ports:
       - "4000:3000"
     volumes: 
-      - ./:/app
-    tty: true
+      - ./apps/backend/src:/app/apps/backend/src:cached
+      - ./apps/backend/test:/app/apps/backend/test:cached
+      - /app/apps/backend/node_modules
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - ten-dash-network
+    restart: unless-stopped
+
+networks:
+  ten-dash-network:
+    driver: bridge
 
