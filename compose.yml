@@ -1,0 +1,12 @@
+services:
+  ten-dash:
+    container_name: ten-dash
+    image: ten-dash
+    build: 
+      context: .
+    ports:
+      - "4000:3000"
+    volumes: 
+      - ./:/app
+    tty: true
+
