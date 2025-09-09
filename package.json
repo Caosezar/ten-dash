@@ -17,12 +17,7 @@
     "lint": "pnpm --recursive run lint",
     "test": "pnpm --recursive run test",
     "test:e2e": "pnpm --recursive run test:e2e",
-    "format": "pnpm --recursive run format",
-    "docker:build": "docker compose build",
-    "docker:up": "docker compose up",
-    "docker:up:build": "docker compose up --build",
-    "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f"
+    "format": "pnpm --recursive run format"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

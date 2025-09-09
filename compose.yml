@@ -6,6 +6,7 @@ services:
       dockerfile: apps/backend/Dockerfile.dev
     ports:
       - "4000:3000"
+    command: pnpm run start
     volumes: 
       - ./apps/backend/src:/app/apps/backend/src:cached
       - ./apps/backend/test:/app/apps/backend/test:cached
@@ -22,6 +23,7 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile.dev
+    command: pnpm run dev
     ports:
       - "3000:3000"
     volumes:

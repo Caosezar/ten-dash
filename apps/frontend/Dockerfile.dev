@@ -15,19 +15,6 @@ COPY apps/frontend/package.json ./apps/frontend/
 # Install all dependencies (this installs for the entire workspace)
 RUN pnpm install
 
-# Copy frontend source files
-COPY apps/frontend/app ./apps/frontend/app
-COPY apps/frontend/lib ./apps/frontend/lib
-COPY apps/frontend/public ./apps/frontend/public
-COPY apps/frontend/*.json ./apps/frontend/
-COPY apps/frontend/*.js ./apps/frontend/
-COPY apps/frontend/*.mjs ./apps/frontend/
-COPY apps/frontend/*.ts ./apps/frontend/
-COPY apps/frontend/README.md ./apps/frontend/
-
-# Set working directory to frontend
-WORKDIR /app/apps/frontend
-
 # Expose port
 EXPOSE 3000
 
