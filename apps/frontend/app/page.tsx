@@ -1,6 +1,5 @@
-import Image from "next/image";
-import { TaskDialog } from "./features/components/task-dialog";
-import { TaskTable } from "./features/components/task-table";
+import { TaskDialog } from "./features/task/components/task-dialog";
+import { TaskTable } from "./features/task/components/task-table";
 
 export default function Home() {
   return (
