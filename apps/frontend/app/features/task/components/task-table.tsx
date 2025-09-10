@@ -14,6 +14,7 @@ import {
   VisibilityState,
 } from "@tanstack/react-table"
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -35,48 +36,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Task, TaskStatus } from "../types/task"
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@example.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@example.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@example.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@example.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@example.com",
-  },
-]
-
-export type Payment = {
-  id: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
-}
-
-export const columns: ColumnDef<Payment>[] = [
+// Definir as colunas da tabela de tasks
+export const columns: ColumnDef<Task>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -100,47 +63,91 @@ export const columns: ColumnDef<Payment>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
-    ),
-  },
-  {
-    accessorKey: "email",
+    accessorKey: "title",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Email
+          Título
           <ArrowUpDown />
         </Button>
       )
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    cell: ({ row }) => <div className="font-medium">{row.getValue("title")}</div>,
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
+    accessorKey: "description",
+    header: "Descrição",
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-
-      return <div className="text-right font-medium">{formatted}</div>
+      const description = row.getValue("description") as string
+      return <div className="text-muted-foreground">{description || "—"}</div>
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as TaskStatus
+      const statusColors = {
+        [TaskStatus.PENDING]: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        [TaskStatus.CREATED]: "bg-blue-100 text-blue-800 border-blue-200",
+        [TaskStatus.IN_PROGRESS]: "bg-purple-100 text-purple-800 border-purple-200",
+        [TaskStatus.BLOCKED]: "bg-red-100 text-red-800 border-red-200",
+        [TaskStatus.COMPLETED]: "bg-green-100 text-green-800 border-green-200",
+      }
+      
+      const displayStatus = status || TaskStatus.PENDING
+      
+      return (
+        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${statusColors[displayStatus]}`}>
+          {displayStatus}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "createdAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Criado em
+          <ArrowUpDown />
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const date = row.getValue("createdAt") as string
+      return <div>{date ? new Date(date).toLocaleDateString('pt-BR') : "—"}</div>
     },
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original
+      const task = row.original
+      const queryClient = useQueryClient()
+
+      const toggleStatusMutation = useMutation({
+        mutationFn: async (taskId: string) => {
+          const response = await fetch(`http://localhost:4000/tasks/${taskId}/done`, {
+            method: 'PATCH',
+          })
+          
+          if (!response.ok) {
+            throw new Error('Erro ao atualizar status da tarefa')
+          }
+          
+          return response.json()
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['tasks'] })
+        },
+      })
 
       return (
         <DropdownMenu>
@@ -151,15 +158,21 @@ export const columns: ColumnDef<Payment>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => navigator.clipboard.writeText(task.id)}
             >
-              Copy payment ID
+              Copiar ID da tarefa
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => toggleStatusMutation.mutate(task.id)}
+              disabled={toggleStatusMutation.isPending}
+            >
+              {task.status === TaskStatus.COMPLETED 
+                ? 'Marcar como pendente' 
+                : 'Marcar como concluída'}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )
@@ -169,15 +182,26 @@ export const columns: ColumnDef<Payment>[] = [
 
 export function TaskTable() {
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
+  // React Query para buscar as tasks
+  const { data: tasks = [], isLoading, error } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: async (): Promise<Task[]> => {
+      const response = await fetch('http://localhost:4000/tasks')
+      
+      if (!response.ok) {
+        throw new Error('Erro ao carregar tarefas')
+      }
+      
+      return response.json()
+    },
+  })
+
   const table = useReactTable({
-    data,
+    data: tasks,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -195,21 +219,37 @@ export function TaskTable() {
     },
   })
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <div>Carregando tarefas...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <div className="text-red-500">Erro ao carregar tarefas</div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+          placeholder="Filtrar por título..."
+          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
+            table.getColumn("title")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
+              Colunas <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -233,7 +273,7 @@ export function TaskTable() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="overflow-hidden rounded-md border">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -276,7 +316,7 @@ export function TaskTable() {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Nenhuma tarefa encontrada.
                 </TableCell>
               </TableRow>
             )}
@@ -284,9 +324,9 @@ export function TaskTable() {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+        <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} de{" "}
+          {table.getFilteredRowModel().rows.length} linha(s) selecionada(s).
         </div>
         <div className="space-x-2">
           <Button
@@ -295,7 +335,7 @@ export function TaskTable() {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            Anterior
           </Button>
           <Button
             variant="outline"
@@ -303,7 +343,7 @@ export function TaskTable() {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            Próximo
           </Button>
         </div>
       </div>

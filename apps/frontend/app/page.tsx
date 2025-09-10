@@ -1,10 +1,10 @@
-import { TaskDialog } from "./features/task/components/task-dialog";
+import { CreateTaskDialog } from "./features/task/components/create-task-dialog";
 import { TaskTable } from "./features/task/components/task-table";
 
 export default function Home() {
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <TaskDialog />
+      <CreateTaskDialog />
       <TaskTable />
     </div>
   );

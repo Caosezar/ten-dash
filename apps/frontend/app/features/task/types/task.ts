@@ -1,0 +1,16 @@
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export enum TaskStatus {
+    PENDING = 'PENDING',
+    CREATED = 'CREATED',
+    IN_PROGRESS = 'IN_PROGRESS',
+    BLOCKED = 'BLOCKED',
+    COMPLETED = 'COMPLETED',
+}
