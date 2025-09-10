@@ -4,17 +4,16 @@ import {
     Dialog,
     DialogClose,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
+    DialogTrigger
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Task, TaskStatus } from "../types/task"
+import { useState } from "react"
+import { Task } from "../types/task"
 
 interface CreateTaskDialogProps {
 }
@@ -45,9 +44,10 @@ export function CreateTaskDialog({}: CreateTaskDialogProps = {}) {
             
             return response.json()
         },
-        onSuccess: () => {
-            
-            queryClient.invalidateQueries({ queryKey: ['tasks'] })
+        onSuccess: (newTask) => {
+            queryClient.setQueryData(['tasks'], (oldTasks: Task[] = []) => {
+                return [...oldTasks, newTask]
+            })
 
             setTitle("")
             setDescription("")
@@ -55,6 +55,7 @@ export function CreateTaskDialog({}: CreateTaskDialogProps = {}) {
         },
         onError: (error) => {
             console.error('Error creating task:', error)
+            queryClient.invalidateQueries({ queryKey: ['tasks'] })
         }
     })
 
@@ -68,9 +69,8 @@ export function CreateTaskDialog({}: CreateTaskDialogProps = {}) {
         const newTask = {
             title: title.trim(),
             description: description.trim() || undefined,
-            status: TaskStatus.PENDING
         }
-        
+        console.log("mutate", newTask)
         createTaskMutation.mutate(newTask)
     }
 

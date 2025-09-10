@@ -8,5 +8,4 @@ export class TaskDTO {
     @IsString()
     @IsNotEmpty()
     description: string;
-    status: TaskStatus;
 };

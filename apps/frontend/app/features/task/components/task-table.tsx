@@ -13,7 +13,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, RefreshCw } from "lucide-react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { Button } from "@/components/ui/button"
@@ -38,30 +38,7 @@ import {
 } from "@/components/ui/table"
 import { Task, TaskStatus } from "../types/task"
 
-// Definir as colunas da tabela de tasks
 export const columns: ColumnDef<Task>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
   {
     accessorKey: "title",
     header: ({ column }) => {
@@ -126,6 +103,24 @@ export const columns: ColumnDef<Task>[] = [
     },
   },
   {
+    accessorKey: "updatedAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Atualizado em
+          <ArrowUpDown />
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const date = row.getValue("updatedAt") as string
+      return <div>{date ? new Date(date).toLocaleDateString('pt-BR') : "—"}</div>
+    },
+  },
+  {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
@@ -144,7 +139,17 @@ export const columns: ColumnDef<Task>[] = [
           
           return response.json()
         },
-        onSuccess: () => {
+        onSuccess: (updatedTask) => {
+          // Atualiza apenas a task específica no cache em vez de invalidar tudo
+          queryClient.setQueryData(['tasks'], (oldTasks: Task[] = []) => {
+            return oldTasks.map(task => 
+              task.id === updatedTask.id ? updatedTask : task
+            )
+          })
+        },
+        onError: (error) => {
+          console.error('Erro ao atualizar status da tarefa:', error)
+          // Em caso de erro, invalida para recarregar os dados corretos
           queryClient.invalidateQueries({ queryKey: ['tasks'] })
         },
       })
@@ -187,7 +192,7 @@ export function TaskTable() {
   const [rowSelection, setRowSelection] = React.useState({})
 
   // React Query para buscar as tasks
-  const { data: tasks = [], isLoading, error } = useQuery({
+  const { data: tasks = [], isLoading, error, refetch } = useQuery({
     queryKey: ['tasks'],
     queryFn: async (): Promise<Task[]> => {
       const response = await fetch('http://localhost:4000/tasks')
@@ -198,6 +203,12 @@ export function TaskTable() {
       
       return response.json()
     },
+    // Configurações para controlar quando a query é executada
+    staleTime: 5 * 60 * 1000, // 5 minutos - dados são considerados "frescos" por 5 min
+    refetchOnWindowFocus: false, // Não refaz a query ao focar na janela
+    refetchOnMount: true, // Refaz a query ao montar o componente
+    refetchInterval: false, // Não refaz a query automaticamente em intervalos
+    retry: 3, // Tenta até 3 vezes em caso de erro
   })
 
   const table = useReactTable({
@@ -229,15 +240,24 @@ export function TaskTable() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-32">
+      <div className="flex flex-col items-center justify-center h-32 space-y-2">
         <div className="text-red-500">Erro ao carregar tarefas</div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => refetch()}
+          disabled={isLoading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Tentar novamente
+        </Button>
       </div>
     )
   }
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-4 gap-2">
         <Input
           placeholder="Filtrar por título..."
           value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
@@ -246,6 +266,16 @@ export function TaskTable() {
           }
           className="max-w-sm"
         />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isLoading}
+          className="ml-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Atualizar
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">

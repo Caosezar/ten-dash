@@ -5,16 +5,31 @@ export class InMemoryBaseRepository<T = BaseEntity> extends BaseRepository<T> {
     private items: T[] = [];
 
     async create(item: T): Promise<T> {
-        this.items.push(item);
-        return item;
+        return new Promise<T>(resolve => {
+            this.items.push(item);
+            resolve(item);
+        });
+
     }
 
     async findById(id: string): Promise<T | null> {
-        return this.items.find(item => (item as any).id === id) || null;
+        return new Promise<T | null>(resolve => {
+            if (!id || typeof id !== 'string') {
+                return resolve(null);
+            }
+            const item = this.items.find(item => {
+                const itemId = (item as any).id;
+                return itemId && itemId === id;
+            });
+            if (item) {
+                return resolve(item);
+            }
+            resolve(null);
+        });
     }
 
     async findAll(): Promise<T[]> {
-        return this.items;
+        return new Promise<T[]>(resolve => resolve(this.items));
     }
 
     async update(id: string, item: Partial<T>): Promise<T | null> {
