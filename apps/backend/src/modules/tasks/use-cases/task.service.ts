@@ -8,9 +8,9 @@ import { TaskStatus } from "../domain/enum";
 @Injectable()
 export class TaskService {
 
-    constructor(private readonly taskRepository: TaskInMemoryRepository) { }
+    constructor(private taskRepository: TaskInMemoryRepository) { }
 
-    async findAllTasks() {
+    findAllTasks() {
         return this.taskRepository.findAll();
     }
 
@@ -26,7 +26,7 @@ export class TaskService {
         return this.taskRepository.create(newTask);
     }
 
-    async toggleTaskDone(id: string): Promise<Task | null> {
-        return this.taskRepository.toggleTaskDone(id);
+    async changeTaskStatus(id: string): Promise<Task | null> {
+        return this.taskRepository.changeTaskStatus(id);
     }
 }

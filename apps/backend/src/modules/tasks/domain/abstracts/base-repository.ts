@@ -1,4 +1,4 @@
-import { BaseEntity } from "src/utils/base-entity";
+import { BaseEntity } from "../../../../utils/base-entity";
 
 export abstract class BaseRepository<T = BaseEntity> {
     abstract create(item: T): Promise<T>;

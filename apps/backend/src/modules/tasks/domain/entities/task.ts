@@ -1,4 +1,4 @@
-import { BaseEntity } from "src/utils/base-entity";
+import { BaseEntity } from "../../../../utils/base-entity";
 import { TaskStatus } from "../enum";
 
 export class Task extends BaseEntity {

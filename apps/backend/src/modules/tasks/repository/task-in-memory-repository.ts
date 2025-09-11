@@ -6,7 +6,7 @@ import { InMemoryBaseRepository } from "./base-in-memory-repository";
 @Injectable()
 export class TaskInMemoryRepository extends InMemoryBaseRepository<Task> {
 
-    async toggleTaskDone(id: string): Promise<Task | null> {
+    async changeTaskStatus(id: string): Promise<Task | null> {
         const task = await this.findById(id);
         if (!task) return null;
 
@@ -17,6 +17,6 @@ export class TaskInMemoryRepository extends InMemoryBaseRepository<Task> {
         return this.update(id, { 
             status: newStatus, 
             updatedAt: new Date() 
-        } as Partial<Task>);
+        });
     }
 }

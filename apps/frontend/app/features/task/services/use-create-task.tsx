@@ -9,17 +9,12 @@ export function useCreateTask() {
     
     const queryClient = useQueryClient()
 
-    const mutation = useMutation<Task, Error, CreateTaskRequest>({
-        mutationFn: async (taskData: CreateTaskRequest) => {
+    const mutation = useMutation({
+        mutationFn: async (taskData: any) => {
             const response = await fetch('http://localhost:4000/tasks', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    title: taskData.title,
-                    description: taskData.description,
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(taskData),
             })
             
             if (!response.ok) {
@@ -33,15 +28,8 @@ export function useCreateTask() {
             resetForm()
             setIsOpen(false)
         },
-        onError: (error) => {
-            console.error('Error creating task:', error)
-        }
     })
 
-    const resetForm = () => {
-        setTitle("")
-        setDescription("")
-    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -51,12 +39,15 @@ export function useCreateTask() {
         const cleanTitle = title.trim()
         const cleanDesc = description.trim() || undefined
         
-        const taskData = { 
+        mutation.mutate({ 
             title: cleanTitle, 
             description: cleanDesc 
-        }
-        
-        mutation.mutate(taskData)
+        })
+    }
+
+    const resetForm = () => {
+        setTitle("")
+        setDescription("")
     }
 
     return {

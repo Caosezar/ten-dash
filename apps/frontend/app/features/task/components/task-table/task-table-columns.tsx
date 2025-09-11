@@ -12,22 +12,22 @@ import { TaskStatusCell } from "./task-table-status-cell"
 
 export const taskColumns = (): ColumnDef<Task>[] => [
   {
-    accessorKey: "title" as keyof Task,
-    header: ({ column }) => (
+    accessorKey: "title",
+    header: ({ column }: any) => (
       <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Título
         <ArrowUpDown />
       </Button>
     ),
-    cell: ({ row }) => (
+    cell: ({ row }: any) => (
       <div className="font-medium max-w-52 overflow-hidden">{row.getValue("title")}</div>
     ),
   },
   {
     accessorKey: "description" as keyof Task,
     header: "Descrição",
-    cell: ({ row }) => {
-      const desc = row.getValue("description") as string | undefined
+    cell: ({ row }: any) => {
+      const desc = row.getValue("description")
       const displayText = desc ? desc : "Sem descrição"
       
       if (desc && desc.length > 50) {
@@ -51,24 +51,27 @@ export const taskColumns = (): ColumnDef<Task>[] => [
     },
   },
   {
-    accessorKey: "status" as keyof Task,
+    accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as TaskStatus
-      return <TaskStatusCell status={status ? status : TaskStatus.PENDING} />
+    cell: ({ row }: any) => {
+      const status = row.getValue("status")
+      return <TaskStatusCell status={status || TaskStatus.PENDING} />
     },
   },
   {
-    accessorKey: "createdAt" as keyof Task,
-    header: ({ column }) => (
+    accessorKey: "createdAt",
+    header: ({ column }: any) => (
       <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Criado em
         <ArrowUpDown />
       </Button>
     ),
-    cell: ({ row }) => {
-      const dateStr = row.getValue("createdAt") as string
-      return dateStr ? <div>{new Date(dateStr).toLocaleDateString('pt-BR')}</div> : "—"
+    cell: ({ row }: any) => {
+      const dateStr = row.getValue("createdAt")
+      if (!dateStr) return "—"
+      
+      const date = new Date(dateStr)
+      return <div>{date.getDate()}/{date.getMonth() + 1}/{date.getFullYear()}</div>
     },
   },
   {
@@ -79,15 +82,12 @@ export const taskColumns = (): ColumnDef<Task>[] => [
         <ArrowUpDown />
       </Button>
     ),
-    cell: ({ row }) => {
-      const updateDate = row.getValue("updatedAt") as string
-      const formattedDate = updateDate ? new Date(updateDate).toLocaleDateString('pt-BR') : "—"
+    cell: ({ row }: any) => {
+      const updateDate = row.getValue("updatedAt")
+      if (!updateDate) return "—"
       
-      return (
-        <div className="flex items-center w-full">
-          {formattedDate}
-        </div>
-      )
+      const date = new Date(updateDate)
+      return <div>{date.getDate()}/{date.getMonth() + 1}/{date.getFullYear()}</div>
     },
   },
 ]

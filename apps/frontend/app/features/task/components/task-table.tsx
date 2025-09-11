@@ -37,18 +37,16 @@ import { useChangeTaskStatus } from "../services"
 import { taskColumns } from "./task-table/task-table-columns"
 
 export function TaskTable() {
-  const [tableState, setTableState] = React.useState<TaskTableState>({
-    sorting: [],
-    columnFilters: [],
-    columnVisibility: {},
-    rowSelection: {},
-  })
+  const [sorting, setSorting] = React.useState<any>([])
+  const [columnFilters, setColumnFilters] = React.useState<any>([])
+  const [columnVisibility, setColumnVisibility] = React.useState<any>({})
+  const [rowSelection, setRowSelection] = React.useState<any>({})
 
   const toggleMutation = useChangeTaskStatus()
 
-  const { data: tasks = [], isLoading, error, refetch } = useQuery<Task[], Error>({
+  const { data: tasks = [], isLoading, error, refetch } = useQuery({
     queryKey: ['tasks'],
-    queryFn: async (): Promise<Task[]> => {
+    queryFn: async () => {
       const response = await fetch('http://localhost:4000/tasks')
 
       if (!response.ok) {
@@ -60,7 +58,7 @@ export function TaskTable() {
     ...QUERY_CONFIG,
   })
 
-  const columns = React.useMemo((): ColumnDef<Task>[] => [
+  const columns = React.useMemo(() => [
     ...taskColumns(),
     {
       id: "actions",
@@ -78,27 +76,20 @@ export function TaskTable() {
   const table = useReactTable({
     data: tasks,
     columns,
-    onSortingChange: (updater) => setTableState(prev => ({ 
-      ...prev, 
-      sorting: typeof updater === 'function' ? updater(prev.sorting) : updater 
-    })),
-    onColumnFiltersChange: (updater) => setTableState(prev => ({ 
-      ...prev, 
-      columnFilters: typeof updater === 'function' ? updater(prev.columnFilters) : updater 
-    })),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: (updater) => setTableState(prev => ({ 
-      ...prev, 
-      columnVisibility: typeof updater === 'function' ? updater(prev.columnVisibility) : updater 
-    })),
-    onRowSelectionChange: (updater) => setTableState(prev => ({ 
-      ...prev, 
-      rowSelection: typeof updater === 'function' ? updater(prev.rowSelection) : updater 
-    })),
-    state: tableState,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
   })
 
   return (
