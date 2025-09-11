@@ -27,6 +27,7 @@ export function TaskForm({
                 <div className="grid gap-2">
                     <Label htmlFor="title">Título *</Label>
                     <Input
+                        maxLength={40}
                         id="title"
                         value={title}
                         onChange={(e) => onTitleChange(e.target.value)}
@@ -37,6 +38,7 @@ export function TaskForm({
                 <div className="grid gap-2">
                     <Label htmlFor="description">Descrição *</Label>
                     <Textarea
+                        maxLength={300}
                         id="description"
                         value={description}
                         onChange={(e) => onDescriptionChange(e.target.value)}
@@ -56,6 +58,7 @@ export function TaskForm({
                             }
                         }}
                     />
+
                 </div>
             </div>
             <DialogFooter>

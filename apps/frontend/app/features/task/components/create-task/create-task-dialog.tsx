@@ -29,7 +29,7 @@ export function CreateTaskDialog({}: CreateTaskDialogProps = {}) {
             <DialogTrigger asChild>
                 <Button variant="default">+ Adicionar Task</Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[55vh] overflow-hidden">
                 <DialogHeader>
                     <DialogTitle>Nova Task</DialogTitle>
                 </DialogHeader>
