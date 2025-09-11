@@ -13,21 +13,21 @@ import { TaskStatusCell } from "./task-table-status-cell"
 export const taskColumns = (): ColumnDef<Task>[] => [
   {
     accessorKey: "title",
-    header: ({ column }: any) => (
+    header: ({ column }) => (
       <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Título
         <ArrowUpDown />
       </Button>
     ),
-    cell: ({ row }: any) => (
+    cell: ({ row }) => (
       <div className="font-medium max-w-52 overflow-hidden">{row.getValue("title")}</div>
     ),
   },
   {
-    accessorKey: "description" as keyof Task,
+    accessorKey: "description",
     header: "Descrição",
-    cell: ({ row }: any) => {
-      const desc = row.getValue("description")
+    cell: ({ row }) => {
+      const desc = row.getValue("description") as string
       const displayText = desc ? desc : "Sem descrição"
       
       if (desc && desc.length > 50) {
@@ -53,21 +53,21 @@ export const taskColumns = (): ColumnDef<Task>[] => [
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }: any) => {
-      const status = row.getValue("status")
+    cell: ({ row }) => {
+      const status = row.getValue("status") as TaskStatus
       return <TaskStatusCell status={status || TaskStatus.PENDING} />
     },
   },
   {
     accessorKey: "createdAt",
-    header: ({ column }: any) => (
+    header: ({ column }) => (
       <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Criado em
         <ArrowUpDown />
       </Button>
     ),
-    cell: ({ row }: any) => {
-      const dateStr = row.getValue("createdAt")
+    cell: ({ row }) => {
+      const dateStr = row.getValue("createdAt") as string
       if (!dateStr) return "—"
       
       const date = new Date(dateStr)
@@ -75,15 +75,15 @@ export const taskColumns = (): ColumnDef<Task>[] => [
     },
   },
   {
-    accessorKey: "updatedAt" as keyof Task,
+    accessorKey: "updatedAt",
     header: ({ column }) => (
       <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Atualizado em
         <ArrowUpDown />
       </Button>
     ),
-    cell: ({ row }: any) => {
-      const updateDate = row.getValue("updatedAt")
+    cell: ({ row }) => {
+      const updateDate = row.getValue("updatedAt") as string
       if (!updateDate) return "—"
       
       const date = new Date(updateDate)

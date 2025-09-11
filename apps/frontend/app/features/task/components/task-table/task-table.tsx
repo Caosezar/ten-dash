@@ -1,9 +1,9 @@
 "use client"
 
-import React from "react"
-import { ChevronDown, RefreshCw } from "lucide-react"
 import {
-  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -11,15 +11,17 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { ChevronDown, RefreshCw } from "lucide-react"
+import React from "react"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -29,36 +31,32 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import { Task, TaskTableState } from "../../types"
-import { TaskActions } from "./task-table-actions"
-import { taskColumns } from "./task-table-columns"
-import { TableLoadingState, TableErrorState, TableEmptyState } from "./task-table-states"
 import { useChangeTaskStatus } from "../../services/use-change-task-status"
 import { useGetTasks } from "../../services/use-get-tasks"
+import { TaskActions } from "./task-table-actions"
+import { taskColumns } from "./task-table-columns"
+import { TableEmptyState, TableErrorState, TableLoadingState } from "./task-table-states"
 
 export function TaskTable() {
-  //remover 
-  const [state, setState] = React.useState<TaskTableState>({
-    sorting: [],
-    columnFilters: [],
-    columnVisibility: {},
-    rowSelection: {},
-  })
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({})
 
   const changeMutation = useChangeTaskStatus()
 
   const { data: tasks = [], isLoading, error, refetch } = useGetTasks()
 
-  const columns = React.useMemo((): ColumnDef<Task>[] => {
+  const columns = React.useMemo(() => {
     const baseColumns = taskColumns()
-    
+
     return [
       ...baseColumns,
       {
         id: "actions",
         enableHiding: false,
         cell: ({ row }) => (
-          <TaskActions 
+          <TaskActions
             task={row.original}
             onStatusChange={(taskId) => changeMutation.mutate(taskId)}
             isChanging={changeMutation.isPending}
@@ -71,27 +69,20 @@ export function TaskTable() {
   const table = useReactTable({
     data: tasks,
     columns,
-    onSortingChange: (updater) => setState(prev => ({ 
-      ...prev, 
-      sorting: typeof updater === 'function' ? updater(prev.sorting) : updater 
-    })),
-    onColumnFiltersChange: (updater) => setState(prev => ({ 
-      ...prev, 
-      columnFilters: typeof updater === 'function' ? updater(prev.columnFilters) : updater 
-    })),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: (updater) => setState(prev => ({ 
-      ...prev, 
-      columnVisibility: typeof updater === 'function' ? updater(prev.columnVisibility) : updater 
-    })),
-    onRowSelectionChange: (updater) => setState(prev => ({ 
-      ...prev, 
-      rowSelection: typeof updater === 'function' ? updater(prev.rowSelection) : updater 
-    })),
-    state: state,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
   })
 
   return (
@@ -105,7 +96,7 @@ export function TaskTable() {
           }
           className="max-w-sm"
         />
-        
+
         <Button
           variant="outline"
           size="sm"
@@ -167,7 +158,7 @@ export function TaskTable() {
             {isLoading ? (
               <TableLoadingState colSpan={columns.length} />
             ) : error ? (
-              <TableErrorState 
+              <TableErrorState
                 colSpan={columns.length}
                 onRetry={refetch}
                 isRetrying={isLoading}

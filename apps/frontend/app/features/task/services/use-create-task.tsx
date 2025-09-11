@@ -1,12 +1,12 @@
-import { useState } from "react"
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Task, CreateTaskRequest } from "../types"
+import { useState } from "react"
 
 export function useCreateTask() {
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
     const [isOpen, setIsOpen] = useState(false)
-    
+
     const queryClient = useQueryClient()
 
     const mutation = useMutation({
@@ -16,11 +16,11 @@ export function useCreateTask() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(taskData),
             })
-            
+
             if (!response.ok) {
                 throw new Error('Erro ao criar tarefa')
             }
-            
+
             return response.json()
         },
         onSuccess: () => {
@@ -33,15 +33,15 @@ export function useCreateTask() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        
+
         if (!title.trim()) return
 
         const cleanTitle = title.trim()
         const cleanDesc = description.trim() || undefined
-        
-        mutation.mutate({ 
-            title: cleanTitle, 
-            description: cleanDesc 
+
+        mutation.mutate({
+            title: cleanTitle,
+            description: cleanDesc
         })
     }
 
