@@ -1,6 +1,7 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import React from "react"
+import { ChevronDown, RefreshCw } from "lucide-react"
 import {
   ColumnDef,
   flexRender,
@@ -10,17 +11,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronDown, RefreshCw } from "lucide-react"
-import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -29,60 +28,54 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Task, TaskTableState } from "../types"
-import { TaskActions } from "./task-table/task-table-actions"
-import { TableLoadingState, TableErrorState, TableEmptyState } from "./task-table/task-table-states"
-import { QUERY_CONFIG } from "../../../config/query-config"
-import { useChangeTaskStatus } from "../services"
-import { taskColumns } from "./task-table/task-table-columns"
+
+import { Task, TaskTableState } from "../../types"
+import { TaskActions } from "./task-table-actions"
+import { taskColumns } from "./task-table-columns"
+import { TableLoadingState, TableErrorState, TableEmptyState } from "./task-table-states"
+import { useChangeTaskStatus } from "../../services/use-change-task-status"
+import { useGetTasks } from "../../services/use-get-tasks"
 
 export function TaskTable() {
-  const [tableState, setTableState] = React.useState<TaskTableState>({
+  //remover 
+  const [state, setState] = React.useState<TaskTableState>({
     sorting: [],
     columnFilters: [],
     columnVisibility: {},
     rowSelection: {},
   })
 
-  const toggleMutation = useChangeTaskStatus()
+  const changeMutation = useChangeTaskStatus()
 
-  const { data: tasks = [], isLoading, error, refetch } = useQuery<Task[], Error>({
-    queryKey: ['tasks'],
-    queryFn: async (): Promise<Task[]> => {
-      const response = await fetch('http://localhost:4000/tasks')
+  const { data: tasks = [], isLoading, error, refetch } = useGetTasks()
 
-      if (!response.ok) {
-        throw new Error('Erro ao carregar tarefas')
-      }
-
-      return response.json()
-    },
-    ...QUERY_CONFIG,
-  })
-
-  const columns = React.useMemo((): ColumnDef<Task>[] => [
-    ...taskColumns(),
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => (
-        <TaskActions 
-          task={row.original}
-          onStatusChange={(taskId) => toggleMutation.mutate(taskId)}
-          isChanging={toggleMutation.isPending}
-        />
-      ),
-    },
-  ], [toggleMutation])
+  const columns = React.useMemo((): ColumnDef<Task>[] => {
+    const baseColumns = taskColumns()
+    
+    return [
+      ...baseColumns,
+      {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => (
+          <TaskActions 
+            task={row.original}
+            onStatusChange={(taskId) => changeMutation.mutate(taskId)}
+            isChanging={changeMutation.isPending}
+          />
+        ),
+      },
+    ]
+  }, [changeMutation])
 
   const table = useReactTable({
     data: tasks,
     columns,
-    onSortingChange: (updater) => setTableState(prev => ({ 
+    onSortingChange: (updater) => setState(prev => ({ 
       ...prev, 
       sorting: typeof updater === 'function' ? updater(prev.sorting) : updater 
     })),
-    onColumnFiltersChange: (updater) => setTableState(prev => ({ 
+    onColumnFiltersChange: (updater) => setState(prev => ({ 
       ...prev, 
       columnFilters: typeof updater === 'function' ? updater(prev.columnFilters) : updater 
     })),
@@ -90,15 +83,15 @@ export function TaskTable() {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: (updater) => setTableState(prev => ({ 
+    onColumnVisibilityChange: (updater) => setState(prev => ({ 
       ...prev, 
       columnVisibility: typeof updater === 'function' ? updater(prev.columnVisibility) : updater 
     })),
-    onRowSelectionChange: (updater) => setTableState(prev => ({ 
+    onRowSelectionChange: (updater) => setState(prev => ({ 
       ...prev, 
       rowSelection: typeof updater === 'function' ? updater(prev.rowSelection) : updater 
     })),
-    state: tableState,
+    state: state,
   })
 
   return (
@@ -112,6 +105,7 @@ export function TaskTable() {
           }
           className="max-w-sm"
         />
+        
         <Button
           variant="outline"
           size="sm"
